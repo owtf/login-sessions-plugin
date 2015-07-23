@@ -2,4 +2,14 @@
 
 from selenium import webdriver
 
+driver = webdriver.PhantomJS()
 
+# variables are defined here
+#******************************
+URL = {{url}}
+ID = {{id}}
+FIELD_1 = {{field1}}
+FIELD_2 = {{field2}}
+CHECK = {{check}}
+
+#******************************
