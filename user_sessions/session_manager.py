@@ -2,15 +2,13 @@
 import shortuuid
 
 
-
 class HTTPSession(object):
     """
     defines a user session
 
     """
 
-    def __init__(self, name, active=False, valid=True, msgs_matched, \
-                 token_vals, token_names):
+    def __init__(self, name, active=False, valid=True, msgs_matched, token_vals, token_names):
         # token_vals is a dict
         # token_names is a list of session token names
         self.name = shortuuid.uuid()
@@ -24,21 +22,18 @@ class HTTPSession(object):
     def set_token_value(self, token_name, value=None):
         # check the value
         if not value:
-            self.token_vals[token_name]
+            self.token_vals.pop(token_name, None)
         # get the current value of the token
-        val = self.token_vals[token_name]
-        if val:
-            self.token_vals[token_name] = value
-        else:
-            self.token_vals[token_name] = None
+        token = self.token_vals[token_name]
+        self.token_vals[token_name] = value or None
 
     def matches_token(self,token_name, value):
         # check if value is null
         if not value:
             return True if token_name in self.token_vals else False
 
-        val = self.token_vals[token_name]
-        if val and val == value:
+        token = self.token_vals[token_name]
+        if token and token == value:
             return True
         else:
             return False
@@ -50,22 +45,16 @@ class HTTPSession(object):
         return self.token_vals.pop(token_name, None)
 
     def count(self):
-        return len([k for (k, v) in self.token_vals.iteritems()])
+        return len([k for (k, v) in self.token_vals.items()])
 
     def token_val_string(self):
         if not self.token_vals:
-            return("")
-        token_string = ""
-        for key in self.token_vals:
-            token_string += key+ " = "+ self.token_vals[key]
-        return token_string
+            return ''
+        return ''.join('%s = %s' % (key, value) for key, value in self.token_vals.items())
 
     def __str__(self):
 
-        return "HTTPSession [name=%s, active=%s, tokenvalues=%s]" % ( self.name, \
-                                                                      self.active,\
-                                                                      self.token_val_string()
-                                                                    )
+        return "HTTPSession [name=%s, active=%s, tokenvalues=%s]" % ( self.name, self.active, self.token_val_string())
 
 
 class SessionManager(object):
