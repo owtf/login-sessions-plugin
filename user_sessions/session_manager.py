@@ -1,5 +1,10 @@
 #!/usr/bin/python3
-import shortuuid
+import uuid
+
+# get a UUID - URL safe, Base64
+def get_uuid():
+    r_uuid = base64.urlsafe_b64encode(uuid.uuid4().bytes)
+    return r_uuid.replace('=', '')
 
 
 class HTTPSession(object):
@@ -11,7 +16,7 @@ class HTTPSession(object):
     def __init__(self, name, active=False, valid=True, msgs_matched, token_vals, token_names):
         # token_vals is a dict
         # token_names is a list of session token names
-        self.name = shortuuid.uuid()
+        self.name = get_uuid()
         self.active = active
         self.valid = valid
         self.msgs_matched = msgs_matched
