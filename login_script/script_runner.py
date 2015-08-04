@@ -7,8 +7,7 @@ import json
 import re
 import logging
 import argparse
-import urllib2
-from urllib2.request import urlopen, Request
+from urllib.request import urlopen, Request
 from selenium import webdriver
 
 
@@ -133,18 +132,18 @@ class LoginScript(object):
         # too much variety for us to handle different input tag names :/
         parameters = self.cli_options["parameters"]
 
-        handler = urllib2.HTTPHandler()
+        handler = urllib.HTTPHandler()
         # create an openerdirector instance
-        opener = urllib2.build_opener(handler)
+        opener = urllib.build_opener(handler)
         # build a request
-        request = urllib2.Request(target, data=parameters)
+        request = urllib.Request(target, data=parameters)
         # add appr content headers
         request.add_header("Content-Type",'application/x-www-form-urlencoded')
         request.get_method = 'POST'
 
         try:
             conn = opener.open(request)
-        except urllib2.HTTPError,e:
+        except urllib.HTTPError as e:
             conn = e
 
         if conn.code == 200:
