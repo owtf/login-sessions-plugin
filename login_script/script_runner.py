@@ -20,9 +20,6 @@ SCRIPT_DIR = os.path.abspath(os.path.join(ROOT_DIR, '..', '/scripts/'))
 logger = logging.getLogger("script generator")
 logger.setLevel(logging.ERROR)
 
-#filehandler
-#filelog = logging.FileHandler(log_path)
-#filelog.setLevel(logging.DEBUG)
 
 # console logging
 console = logging.StreamHandler()
@@ -30,11 +27,9 @@ console.setLevel(logging.ERROR)
 
 # create formatter and add it to the handlers
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-#filelog.setFormatter(formatter)
 console.setFormatter(formatter)
 
 # add the handlers to the logger
-#logger.addHandler(filelog)
 logger.addHandler(console)
 
 
@@ -173,17 +168,14 @@ class LoginScript(object):
         # check for login sequence
         match = re.search(self.check_pattern, source)
         if match:
-            print(LOGIN_SCRIPT_STATUSES["success"])
+            #print(LOGIN_SCRIPT_STATUSES["success"])
             logger.success(LOGIN_SCRIPT_STATUSES["success"])
         else:
-            print(LOGIN_SCRIPT_STATUSES["failure"])
+            #print(LOGIN_SCRIPT_STATUSES["failure"])
             logger.warn(LOGIN_SCRIPT_STATUSES["failure"])
 
     def teardown(self):
-        """
-        cleanup process after the login script is played
-
-        """
-        # first close the driver
+        """Cleanup process after the login script is played """
+        # close the driver
         self.browser.quit()
 
