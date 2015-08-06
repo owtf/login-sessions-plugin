@@ -1,4 +1,9 @@
 #!/usr/bin/python3
+"""
+:synopsis: Defines the script runner which accepts either CLI args or a script name.
+The script does the authentication for the user.
+.. moduleauthor:: Viyat Bhalodia
+"""
 import os
 import sys
 import base64
@@ -74,12 +79,12 @@ def parse_args():
         default=None,
         help="the target for auto-login")
     parser.add_argument(
-        "parameters", "-p",
+        "--parameters", "-p",
         dest="parameters",
         default=None,
         help="The username/password for the login form")
     parser.add_argument(
-        "check", "-c",
+        "--check", "-c",
         dest="check",
         default=None,
         help="Python regex/string to check for successful login")
@@ -88,24 +93,42 @@ def parse_args():
 
 
 class LoginScript(object):
+    """
+    .. note::
+        This defines the main Login script runner. This will be imported into OWTF for further integration
 
+    """
     def __init__(self, script_name=None):
-        # check if cli args are present or not
+        """Initialize :class:`LoginScript`.
+
+        :param str script_name: Name of the authentication script.
+
+        """
+        # : :class: `type` -- Checks if CLI args are present or not
         if sys.argv[1:]:
             # present
             self.cli_options = parse_args()
             self.check_pattern = cli_options["check"]
         else:
             if script:
+                #: :class: `str` -- Script name
                 self.script = script_name
+                #: :class: `str` -- Login sequence check
                 self.check_pattern = conf["check_pattern"]
             else:
                 logger.error("No script specified! Exiting....")
                 sys.exit(-1)
+        #: :class: `type` -- The PhantomJS browser instance
         self.browser = self.prep()
         self.id = get_uuid()
 
-    def prep(self):
+    @staticmethod
+    def prep():
+        """Uses the config parameters to initialise a PhantomJS instance.
+        :return: A Selenium PhantomJS browser instance
+        :rtype: object
+        :raises: :class:`WebDriverException`.
+        """
         try:
             return webdriver.PhantomJS(
                         service_args=[
@@ -120,7 +143,8 @@ class LoginScript(object):
         except WebDriverException:
             logger.critical("Cannot load the browser instance")
 
-    def auto_login_cmd():
+    def auto_login_cmd(self):
+        """Tries to authenticate the user via the parameters provided."""
         # the support is still rudimentry
         target = self.cli_options["target"]
         # this is the url-encoded data
@@ -132,7 +156,7 @@ class LoginScript(object):
         opener = urllib.build_opener(handler)
         # build a request
         request = urllib.Request(target, data=parameters)
-        # add appr content headers
+        # add appropriate content headers
         request.add_header("Content-Type",'application/x-www-form-urlencoded')
         request.get_method = 'POST'
 
@@ -155,12 +179,13 @@ class LoginScript(object):
                 print("login unsuccessful!")
 
     def run(self):
+        """Runs the actual authentication script"""
         with open(os.path.join(SCRIPT_DIR, script_name), "r") as file:
             script = file.read()
-
+        #: :class: `type` -- The browser instance
         browser = self.browser
 
-        # run the login script using the above browser instance
+        # Magic: run the login script using the above browser instance
         exec(script, globals())
 
         source = browser.page_source
@@ -168,10 +193,8 @@ class LoginScript(object):
         # check for login sequence
         match = re.search(self.check_pattern, source)
         if match:
-            #print(LOGIN_SCRIPT_STATUSES["success"])
             logger.success(LOGIN_SCRIPT_STATUSES["success"])
         else:
-            #print(LOGIN_SCRIPT_STATUSES["failure"])
             logger.warn(LOGIN_SCRIPT_STATUSES["failure"])
 
     def teardown(self):
