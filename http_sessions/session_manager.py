@@ -8,10 +8,7 @@ def get_uuid():
 
 
 class HTTPSession(object):
-    """
-    defines a user session
-
-    """
+    """Defines a user session"""
 
     def __init__(self, name, active=False, valid=True, msgs_matched, token_vals, token_names):
         # token_vals is a dict
@@ -58,16 +55,13 @@ class HTTPSession(object):
         return ''.join('%s = %s' % (key, value) for key, value in self.token_vals.items())
 
     def __str__(self):
-
         return "HTTPSession [name=%s, active=%s, tokenvalues=%s]" % ( self.name, self.active, self.token_val_string())
 
 
 class SessionManager(object):
-    """
-    simple API for managing multiple HTTPsessions
+    """Simple API for managing multiple HTTPsessions
     for a target
     1 session manager obj for one target
-
     """
     def __init__(self, sessions=None, target):
         self.target = target
