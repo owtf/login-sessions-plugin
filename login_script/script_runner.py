@@ -7,7 +7,7 @@ The script does the authentication for the user.
 import os
 import sys
 import base64
-import uuid
+import binascii
 import json
 import re
 import logging
@@ -17,9 +17,9 @@ from selenium import webdriver
 
 
 #DIR SETUP
-ROOT_DIR = os.path.abspath(sys.argv[0])
-LOG_DIR = os.path.abspath(os.path.join(ROOT_DIR, '..', '/logs/'))
-SCRIPT_DIR = os.path.abspath(os.path.join(ROOT_DIR, '..', '/scripts/'))
+ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
+LOG_DIR = os.path.abspath(os.path.join(ROOT_DIR, 'logs'))
+SCRIPT_DIR = os.path.abspath(os.path.join(ROOT_DIR, 'scripts'))
 
 # basic logging setup
 logger = logging.getLogger("script generator")
@@ -42,17 +42,6 @@ logger.addHandler(console)
 with open("conf.json", "r") as config:
     conf = json.load(config)
 
-
-# get a UUID - URL safe, Base64
-def get_uuid():
-    r_uuid = base64.urlsafe_b64encode(uuid.uuid4().bytes)
-    return r_uuid.replace('=', '')
-
-
-# get name of the script and store it in SCRIPT var
-script_name = sys.argv[1]
-
-
 AUTO_LOGIN_STATUSES  = {
     "ok": 'Form submitted successfully.',
     "form_not_found": 'Could not find a form suiting the provided parameters.',
@@ -73,6 +62,11 @@ LOGIN_SCRIPT_STATUSES  = {
 # args parsing here
 def parse_args():
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--script","-s",
+        dest="script",
+        default=None,
+        help="the script name")
     parser.add_argument(
         "--target","-t",
         dest="target",
@@ -98,29 +92,25 @@ class LoginScript(object):
         This defines the main Login script runner. This will be imported into OWTF for further integration
 
     """
-    def __init__(self, script_name=None):
+    def __init__(self):
         """Initialize :class:`LoginScript`.
 
         :param str script_name: Name of the authentication script.
 
         """
         # : :class: `type` -- Checks if CLI args are present or not
-        if sys.argv[1:]:
-            # present
-            self.cli_options = parse_args()
-            self.check_pattern = cli_options["check"]
+        self.cli_options = parse_args()
+        if self.cli_options.script:
+            #: :class: `str` -- Script name
+            self.script = self.cli_options.script
+            #: :class: `str` -- Login sequence check
+            self.check_pattern = conf["check_pattern"]
         else:
-            if script:
-                #: :class: `str` -- Script name
-                self.script = script_name
-                #: :class: `str` -- Login sequence check
-                self.check_pattern = conf["check_pattern"]
-            else:
-                logger.error("No script specified! Exiting....")
-                sys.exit(-1)
+            self.check_pattern = self.cli_options.check
         #: :class: `type` -- The PhantomJS browser instance
         self.browser = self.prep()
-        self.id = get_uuid()
+        #: :class: `type` -- A very simple random token generator
+        self.id = binascii.hexlify(os.urandom(1000))
 
     @staticmethod
     def prep():
@@ -146,10 +136,10 @@ class LoginScript(object):
     def auto_login_cmd(self):
         """Tries to authenticate the user via the parameters provided."""
         # the support is still rudimentry
-        target = self.cli_options["target"]
+        target = self.cli_options.target
         # this is the url-encoded data
         # too much variety for us to handle different input tag names :/
-        parameters = self.cli_options["parameters"]
+        parameters = self.cli_options.parameters
 
         handler = urllib.HTTPHandler()
         # create an openerdirector instance
@@ -180,7 +170,7 @@ class LoginScript(object):
 
     def run(self):
         """Runs the actual authentication script"""
-        with open(os.path.join(SCRIPT_DIR, script_name), "r") as file:
+        with open(os.path.join(SCRIPT_DIR, self.script), "r") as file:
             script = file.read()
         #: :class: `type` -- The browser instance
         browser = self.browser
@@ -201,4 +191,14 @@ class LoginScript(object):
         """Cleanup process after the login script is played """
         # close the driver
         self.browser.quit()
+
+
+if __name__ == "__main__":
+    login_obj = LoginScript()
+    if login_obj.script:
+        login_obj.run()
+    else:
+        login_obj.auto_login_cmd()
+    login_obj.teardown()
+    print("Login sequence successful")
 
