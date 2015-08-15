@@ -3,5 +3,6 @@
     "login_retry_wait": 5,
     "proxy": "http://127.0.0.1:8008",
     "disk_cache": "true",
-    "debug": "true"
+    "debug": "true",
+    "check_pattern": "/logged_in/g"
 }
