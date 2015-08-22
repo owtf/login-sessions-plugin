@@ -6,14 +6,14 @@ The script does the authentication for the user.
 """
 import os
 import sys
-import base64
 import binascii
 import json
 import re
 import logging
 import argparse
-from urllib.request import urlopen, Request
+import urllib
 from selenium import webdriver
+from selenium.common.exceptions import WebDriverException
 
 
 #DIR SETUP
@@ -98,18 +98,18 @@ class LoginScript(object):
         :param str script_name: Name of the authentication script.
 
         """
-        # : :class: `type` -- Checks if CLI args are present or not
+        # Checks if CLI args are present or not
         self.cli_options = parse_args()
         if self.cli_options.script:
-            #: :class: `str` -- Script name
+            # Script name
             self.script = self.cli_options.script
-            #: :class: `str` -- Login sequence check
+            # Login sequence check
             self.check_pattern = conf["check_pattern"]
         else:
             self.check_pattern = self.cli_options.check
-        #: :class: `type` -- The PhantomJS browser instance
+        # The PhantomJS browser instance
         self.browser = self.prep()
-        #: :class: `type` -- A very simple random token generator
+        # A very simple random token generator
         self.id = binascii.hexlify(os.urandom(1000))
 
     @staticmethod
@@ -172,7 +172,7 @@ class LoginScript(object):
         """Runs the actual authentication script"""
         with open(os.path.join(SCRIPT_DIR, self.script), "r") as file:
             script = file.read()
-        #: :class: `type` -- The browser instance
+        # The browser instance
         browser = self.browser
 
         # Magic: run the login script using the above browser instance
