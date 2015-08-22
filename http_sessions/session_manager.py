@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 import uuid
+import base64
+
 
 # get a UUID - URL safe, Base64
 def get_uuid():
@@ -10,7 +12,7 @@ def get_uuid():
 class HTTPSession(object):
     """Defines a user session"""
 
-    def __init__(self, name, active=False, valid=True, msgs_matched, token_vals, token_names):
+    def __init__(self, name, active=False, valid=True, msgs_matched=None, token_vals=None, token_names=None):
         # token_vals is a dict
         # token_names is a list of session token names
         self.name = get_uuid()
@@ -26,7 +28,6 @@ class HTTPSession(object):
         if not value:
             self.token_vals.pop(token_name, None)
         # get the current value of the token
-        token = self.token_vals[token_name]
         self.token_vals[token_name] = value or None
 
     def matches_token(self,token_name, value):
@@ -47,6 +48,7 @@ class HTTPSession(object):
         return self.token_vals.pop(token_name, None)
 
     def count(self):
+        # counts the net no of tokens - including nested ones
         return len([k for (k, v) in self.token_vals.items()])
 
     def token_val_string(self):
@@ -59,11 +61,14 @@ class HTTPSession(object):
 
 
 class SessionManager(object):
-    """Simple API for managing multiple HTTPsessions
-    for a target
-    1 session manager obj for one target
     """
-    def __init__(self, sessions=None, target):
+    Simple API for managing multiple HTTPsessions
+    for a target
+    Usage:
+        One session manager object for one target
+        >> SessionManager([], google.com)
+    """
+    def __init__(self, sessions=None, target=None):
         self.target = target
         # sessions is a list of httpsessions objects
         self.sessions = sessions
@@ -83,7 +88,7 @@ class SessionManager(object):
     def remove_session(self, id):
         for session in self.sessions:
             if session["name"] == id:
-                self.sessions.remove(httpsession)
+                self.sessions.remove(session)
             else:
                 print("No such session")
 
